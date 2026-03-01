@@ -12,6 +12,7 @@ import KnowledgeTab from './components/tabs/KnowledgeTab';
 import FlowTab from './components/tabs/FlowTab';
 import TeamTab from './components/tabs/TeamTab';
 import ProjectSettingsTab from './components/tabs/ProjectSettingsTab';
+import AgentPlayground from './components/AgentPlayground';
 import { Button } from './components/ui/Button';
 import { generateAgentRuntimeZip, generatePocketFlowPythonZip } from './services/agentExportService';
 
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   // --- NAVIGATION STATE ---
   const [activeTab, setActiveTab] = useState<TabId>('settings');
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
   // --- ORGANIZATION STATE ---
@@ -382,6 +384,15 @@ const App: React.FC = () => {
            <div className="h-6 w-px bg-neutral-200 hidden md:block"></div>
 
            <div className="flex items-center gap-2">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={() => setIsPlaygroundOpen(!isPlaygroundOpen)}
+              className="hidden md:flex"
+              icon={<svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+            >
+              Test Agent
+            </Button>
             <Button variant="outline" size="sm" onClick={() => alert('Project saved')}>Save</Button>
              <div className="relative" ref={exportMenuRef}>
                <Button 
@@ -423,7 +434,7 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Layout */}
-      <div className="flex flex-1 max-w-[1600px] mx-auto w-full">
+      <div className="flex flex-1 max-w-[1600px] mx-auto w-full relative">
         <Sidebar 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
@@ -458,6 +469,15 @@ const App: React.FC = () => {
               {renderContent()}
            </div>
         </main>
+        
+        {/* Agent Playground Drawer */}
+        {activeAgent && (
+          <AgentPlayground 
+            activeAgent={activeAgent} 
+            isOpen={isPlaygroundOpen} 
+            onClose={() => setIsPlaygroundOpen(false)} 
+          />
+        )}
       </div>
     </div>
   );

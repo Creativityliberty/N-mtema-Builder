@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { FlowData } from "../types";
+import { FlowData, AgentConfig, ChatMessage } from "../types";
 
 // Initialize the client safely
 const getClient = () => {
@@ -358,4 +358,57 @@ export const iterateFlowStructure = async (
   });
 
   return JSON.parse(response.text || "{}");
+};
+
+// --- PLAYGROUND SIMULATION ---
+
+export const simulateAgentResponse = async (
+  agent: AgentConfig,
+  history: ChatMessage[]
+): Promise<string> => {
+  const client = getClient();
+  if (!client) throw new Error("API Key missing");
+
+  // Construct a rich System Prompt simulating the agent runtime
+  let systemPrompt = `
+  You are simulating an AI Agent defined by the following configuration.
+  
+  IDENTITY:
+  Name: ${agent.name}
+  Role: ${agent.role}
+  Goal: ${agent.goal}
+  Tone: ${agent.personaTone}
+  
+  CORE INSTRUCTIONS:
+  ${agent.baseInstructions}
+  
+  GLOBAL PROMPTS (Context Modules):
+  ${agent.globalPrompts.map(p => `- ${p.label}: ${p.content}`).join('\n')}
+  
+  AVAILABLE TOOLS (Simulation Mode - You do not execute, just pretend):
+  ${agent.tools.map(t => `- ${t.name} (${t.slug}): ${t.description}`).join('\n')}
+  
+  INSTRUCTIONS FOR SIMULATION:
+  - Act exactly as the agent would.
+  - If the agent would call a tool, output [TOOL_CALL: tool_slug, args].
+  - Maintain the persona strictly.
+  `;
+
+  // Map chat history to Gemini format
+  const contents = history.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.content }]
+  }));
+
+  const response = await client.models.generateContent({
+    model: 'gemini-2.5-flash', // Use flash for fast simulation
+    contents: contents,
+    config: {
+      systemInstruction: systemPrompt,
+      temperature: agent.llm.temperature,
+      maxOutputTokens: agent.llm.maxTokens,
+    }
+  });
+
+  return response.text || "";
 };

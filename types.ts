@@ -22,6 +22,18 @@ export enum GeminiModel {
   VEO_HQ = 'veo-3.1-generate-preview'
 }
 
+export interface ChatMessage {
+  role: 'user' | 'model' | 'system';
+  content: string;
+  toolCalls?: ToolCall[];
+}
+
+export interface ToolCall {
+  name: string;
+  args: Record<string, any>;
+  result?: string;
+}
+
 export interface GlobalPrompt {
   id: string;
   label: string;
